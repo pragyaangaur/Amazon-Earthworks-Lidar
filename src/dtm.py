@@ -84,6 +84,10 @@ def save_tiles(dtm, origin, outdir):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     rel, hs = lrm(dtm), hillshade(dtm)
+    # Holes in the ground data (ponds, buildings, dense canopy) give ring-shaped halos in the
+    # relief image that look like small enclosures, so the relief is blanked near every hole.
+    near_hole = ndimage.distance_transform_edt(~np.isnan(dtm)) * RES < 15
+    rel[near_hole] = np.nan
     h, w = dtm.shape
     for r in range(0, h, TILE):
         for c in range(0, w, TILE):
