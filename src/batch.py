@@ -1,8 +1,8 @@
-"""Download Acre transects one at a time, build the DTM and tiles, then delete the raw file.
+"""Download Acre transects one at a time, build the DTM and tiles. Raw files are kept so canopy views do not need a second download.
 
 Usage: python -I src/batch.py 0413 0415 ...
 
-Only one raw transect is on disk at any time, which keeps disk use low and suits a slow network. The DTM and tiles are kept under outputs/private.
+Only one transect downloads at a time, which suits a slow network. The DTM and tiles are kept under outputs/private.
 """
 import subprocess
 import sys
@@ -27,7 +27,7 @@ def run(tid):
         z.extract(name, raw)
     print(tid, f"downloaded in {time.time() - t:.0f} s", flush=True)
     subprocess.run([sys.executable, "-I", str(ROOT / "src" / "dtm.py"), str(raw / name), str(out)], check=True)
-    (raw / name).unlink()
+
 
 
 if __name__ == "__main__":
