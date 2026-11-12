@@ -7,3 +7,4 @@ outputs/private/
 *.tif
 __pycache__/
 .DS_Store
+OMOS_SWARM_PROMPT.md
