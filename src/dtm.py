@@ -11,21 +11,31 @@ import laspy
 import numpy as np
 from scipy import ndimage
 
-RES = 1.0          # grid size in metres
+RES = 3.0          # grid size in metres; about 2 points per m2 leaves few ground hits per 1 m cell under forest
 LRM_SIGMA = 15.0   # smoothing scale in metres; ditches are 5 to 15 m wide
-TILE = 800         # tile edge in pixels for review images
+TILE = 400         # tile edge in pixels for review images
 
 
 def read_ground(path):
+    # The class 2 points in the EBA files include canopy returns up to 40 m above the ground
+    # under forest, so every point is kept and ground_filter() does the work instead.
     las = laspy.read(path)
-    cls = np.asarray(las.classification)
     x, y, z = np.asarray(las.x), np.asarray(las.y), np.asarray(las.z)
-    ground = cls == 2
-    if ground.sum() < 1000:
-        # Unclassified data: keep everything and let the grid minimum act as a crude ground filter.
-        ground = np.ones_like(cls, dtype=bool)
-    print(f"{len(cls)} points, {ground.sum()} ground, crs={las.header.parse_crs()}")
-    return x[ground], y[ground], z[ground]
+    print(f"{len(z)} points, crs={las.header.parse_crs()}")
+    return x, y, z
+
+
+def ground_filter(dtm, passes=(40, 20, 10), tol=0.7):
+    # Iterative surface fit: cells that sit more than tol metres above a smoothed copy of the
+    # surface are treated as vegetation and removed, from coarse to fine scale.
+    dtm = dtm.copy()
+    for size in passes:
+        k = max(3, int(size / RES))
+        filled = fill_gaps(dtm, 10 ** 6)
+        base = ndimage.grey_opening(filled, size=k)
+        base = ndimage.uniform_filter(base, k)
+        dtm[(dtm - base) > tol] = np.nan
+    return dtm
 
 
 def grid_min(x, y, z):
@@ -82,7 +92,7 @@ def save_tiles(dtm, origin, outdir):
                 continue
             fig, ax = plt.subplots(1, 2, figsize=(12, 6))
             ax[0].imshow(hs[sl], cmap="gray")
-            ax[1].imshow(rel[sl], cmap="RdBu_r", vmin=-0.6, vmax=0.6)
+            ax[1].imshow(rel[sl], cmap="RdBu_r", vmin=-0.8, vmax=0.8)
             for a in ax:
                 a.set_xticks([]); a.set_yticks([])
             fig.suptitle(f"tile r{r} c{c} (1 px = {RES} m)")
@@ -96,7 +106,7 @@ def main(src, out):
     outdir.mkdir(parents=True, exist_ok=True)
     x, y, z = read_ground(src)
     dtm, origin = grid_min(x, y, z)
-    dtm = fill_gaps(remove_spikes(fill_gaps(dtm, 3)))
+    dtm = fill_gaps(ground_filter(dtm), 5)
     np.save(outdir / "dtm.npy", dtm)
     np.save(outdir / "origin.npy", np.array(origin))
     print(f"DTM {dtm.shape}, {np.isnan(dtm).mean():.1%} empty")
