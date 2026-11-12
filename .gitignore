@@ -1,0 +1,9 @@
+AGENTS.md
+HANDOFF.md
+data/
+outputs/private/
+*.laz
+*.las
+*.tif
+__pycache__/
+.DS_Store
