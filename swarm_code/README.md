@@ -1,4 +1,6 @@
-# Code in this private bundle
+# Swarm code
+
+These scripts were written by the Open Math OS agent swarm that ran the full search from 13 to 17 November 2026. They are kept as they were run. The swarm's `references/` folder held reference data with feature positions, so it was left out of this repository, and commands that point into it will not run here. The paths below use `code/`, which is what this folder was called inside the swarm's workspace.
 
 The scripts were run from the project root with the project-local `.venv`. No network access is required by these offline phases except downloading public data.
 
