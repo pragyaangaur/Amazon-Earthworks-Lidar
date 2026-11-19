@@ -8,3 +8,7 @@ outputs/private/
 __pycache__/
 .DS_Store
 OMOS_SWARM_PROMPT.md
+*.zip
+*_validation.json
+Chat Log.rtfd/
+swarm/
