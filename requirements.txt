@@ -1,0 +1,9 @@
+laspy[lazrs]
+numpy
+scipy
+matplotlib
+requests
+remotezip
+geopandas
+pyproj
+pandas
